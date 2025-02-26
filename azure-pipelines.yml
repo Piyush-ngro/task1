@@ -12,7 +12,7 @@ steps:
   inputs:
     versionSpec: '11'
     jdkArchitectureOption: 'x64'
-    jdkSourceOption: 'PreInstalled' # Fix: Explicitly specify JDK source
+    jdkSourceOption: 'AzureStorage'  # Ensure JDK is installed from Azure Storage
 
 - task: Maven@3
   displayName: "Build and Run Tests"
