@@ -7,12 +7,19 @@ pool:
     - Agent.Name -equals vbox 
 
 steps:
+- task: JavaToolInstaller@0
+  displayName: "Install JDK 11"
+  inputs:
+    versionSpec: '11'
+    jdkArchitecture: 'x64'
+    jdkSource: 'PreInstalled' # Use 'AzureStorage' if downloading JDK manually
+
 - task: Maven@3
   displayName: "Build and Run Tests"
   inputs:
     mavenPomFile: 'pom.xml'
     mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
+    javaHomeOption: 'Path'
     jdkVersionOption: '1.11'
     jdkArchitectureOption: 'x64'
     goals: 'clean package'
@@ -25,4 +32,3 @@ steps:
   inputs:
     pathToPublish: '$(Build.SourcesDirectory)/target'  
     artifactName: 'drop'
-
