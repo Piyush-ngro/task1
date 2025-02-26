@@ -4,7 +4,7 @@ trigger:
 pool:
   name: Default  
   demands:
-    - Agent.Name -equals myagent  
+    - Agent.Name -equals vbox 
 
 steps:
 - task: Maven@3
