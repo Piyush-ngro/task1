@@ -7,13 +7,6 @@ pool:
     - Agent.Name -equals vbox 
 
 steps:
-- task: JavaToolInstaller@0
-  displayName: "Install JDK 11"
-  inputs:
-    versionSpec: '11'
-    jdkArchitectureOption: 'x64'
-    jdkSourceOption: 'AzureStorage'  # Ensure JDK is installed from Azure Storage
-
 - task: Maven@3
   displayName: "Build and Run Tests"
   inputs:
