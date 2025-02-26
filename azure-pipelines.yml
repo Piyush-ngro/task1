@@ -11,8 +11,8 @@ steps:
   displayName: "Install JDK 11"
   inputs:
     versionSpec: '11'
-    jdkArchitecture: 'x64'
-    jdkSource: 'PreInstalled' # Use 'AzureStorage' if downloading JDK manually
+    jdkArchitectureOption: 'x64'  # Fix: Explicitly specify architecture
+    jdkSource: 'PreInstalled' # Change to 'AzureStorage' if you want to download
 
 - task: Maven@3
   displayName: "Build and Run Tests"
