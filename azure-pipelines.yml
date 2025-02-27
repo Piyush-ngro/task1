@@ -1,0 +1,26 @@
+trigger:
+- main
+
+pool:
+  name: Default  
+  demands:
+    - Agent.Name -equals vbox 
+
+steps:
+- task: Maven@3
+  displayName: "Build and Run Tests"
+  inputs:
+    mavenPomFile: 'pom.xml'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'Path'  # Tell Azure DevOps to use the system-installed JDK
+    jdkDirectory: "/usr/lib/jvm/java-11-openjdk"  # Change this to the actual JDK path
+    goals: 'clean package'
+    publishJUnitResults: true
+    testResultsFiles: '**/target/surefire-reports/TEST-*.xml'
+    codeCoverageToolOption: 'JaCoCo'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish Build Artifacts"
+  inputs:
+    pathToPublish: '$(Build.SourcesDirectory)/target'
+    artifactName: 'drop'
