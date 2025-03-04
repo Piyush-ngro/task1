@@ -1,0 +1,58 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - develop
+      - feature-*
+  pull_request:
+    branches:
+      - develop
+      - feature-*
+  schedule:
+    - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST (11:30 AM UTC)
+
+jobs:
+  build:
+    runs-on: self-hosted  # Uses the self-hosted runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (if applicable)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18  # Use the appropriate version for your project
+
+      - name: Install dependencies
+        run: npm install  # Change based on your package manager
+
+      - name: Build the project
+        run: npm run build  # Modify for your build process
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/  # Modify based on your build output directory
+
+  test:
+    runs-on: self-hosted
+    needs: build  # Run tests after the build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test -- --coverage
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: coverage/  # Modify based on where test reports are generated
