@@ -1,6 +1,7 @@
 name: CI Pipeline
 
 on:
+  workflow_dispatch:  # Enables manual trigger from GitHub Actions UI
   push:
     branches:
       - develop
@@ -11,6 +12,7 @@ on:
       - feature-*
   schedule:
     - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST (11:30 AM UTC)
+
 
 jobs:
   build:

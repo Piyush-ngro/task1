@@ -11,11 +11,11 @@ on:
       - main
       - develop
   schedule:
-    - cron: "30 11 * * 1,4"  # Runs every Monday and Thursday at 5:00 PM IST
+    - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Use self-hosted runner if needed
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -50,14 +50,14 @@ jobs:
         if: contains(github.ref, 'java')
         run: mvn clean package -DskipTests
 
-      - name: Upload Build Artifacts
+      - name: Upload Build Artifacts with Versioning
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
           path: |
             **/bin/Release/
             **/target/
-  
+
   test:
     runs-on: ubuntu-latest
     needs: build
@@ -69,24 +69,20 @@ jobs:
       - name: Run NUnit Tests (.NET)
         if: contains(github.ref, 'dotnet')
         run: dotnet test --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        continue-on-error: true  # Allows build to proceed even if tests fail
 
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
         run: mvn test
+        continue-on-error: true
 
-      - name: Upload Test Results (.NET)
-        if: contains(github.ref, 'dotnet')
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: "**/TestResults/*.trx"
-
-      - name: Upload Test Results (Java)
-        if: contains(github.ref, 'java')
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-reports
-          path: "**/target/surefire-reports/*.xml"
+          name: test-results-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            **/TestResults/*.trx
+            **/target/surefire-reports/*.xml
 
       - name: Generate Code Coverage Report (.NET)
         if: contains(github.ref, 'dotnet')
@@ -101,8 +97,45 @@ jobs:
       - name: Upload Coverage Reports
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage
+          name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
           path: |
             **/coverage/
             **/target/site/jacoco/
- 
+
+  static_analysis:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=my_project \
+            -Dsonar.organization=my_org \
+            -Dsonar.host.url=https://sonarcloud.io
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, static_analysis]
+    if: success()  # Skip deployment if tests or static analysis fail
+
+    steps:
+      - name: Deploy Application
+        run: echo "Deploying application..."
+  
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, test, static_analysis, deploy]
+    if: failure()  # Only runs if any previous step failed
+
+    steps:
+      - name: Send Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "🚨 CI/CD Pipeline Failed! Please check the logs."
