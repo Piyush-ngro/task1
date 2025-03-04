@@ -1,6 +1,7 @@
 name: Advanced CI Pipeline
 
 on:
+  workflow_dispatch:  # Enables manual trigger from GitHub Actions UI
   push:
     branches:
       - main
