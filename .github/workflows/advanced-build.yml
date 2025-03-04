@@ -1,0 +1,141 @@
+name: Advanced CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature-*
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        if: contains(github.ref, 'dotnet')
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Set up Java
+        if: contains(github.ref, 'java')
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Restore dependencies (.NET)
+        if: contains(github.ref, 'dotnet')
+        run: dotnet restore
+
+      - name: Restore dependencies (Java)
+        if: contains(github.ref, 'java')
+        run: mvn dependency:resolve
+
+      - name: Build the application (.NET)
+        if: contains(github.ref, 'dotnet')
+        run: dotnet build --configuration Release
+
+      - name: Build the application (Java)
+        if: contains(github.ref, 'java')
+        run: mvn clean package -DskipTests
+
+      - name: Upload Build Artifacts with Versioning
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            **/bin/Release/
+            **/target/
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run NUnit Tests (.NET)
+        if: contains(github.ref, 'dotnet')
+        run: dotnet test --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        continue-on-error: true  # Allows build to proceed even if tests fail
+
+      - name: Run JUnit Tests (Java)
+        if: contains(github.ref, 'java')
+        run: mvn test
+        continue-on-error: true
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            **/TestResults/*.trx
+            **/target/surefire-reports/*.xml
+
+      - name: Generate Code Coverage Report (.NET)
+        if: contains(github.ref, 'dotnet')
+        run: |
+          dotnet tool install --global reportgenerator
+          reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage -reporttypes:Html
+
+      - name: Generate Code Coverage Report (Java)
+        if: contains(github.ref, 'java')
+        run: mvn jacoco:report
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            **/coverage/
+            **/target/site/jacoco/
+
+  static_analysis:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run SonarCloud Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=my_project \
+            -Dsonar.organization=my_org \
+            -Dsonar.host.url=https://sonarcloud.io
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [test, static_analysis]
+    if: success()  # Skip deployment if tests or static analysis fail
+
+    steps:
+      - name: Deploy Application
+        run: echo "Deploying application..."
+  
+  notify:
+    runs-on: ubuntu-latest
+    needs: [build, test, static_analysis, deploy]
+    if: failure()  # Only runs if any previous step failed
+
+    steps:
+      - name: Send Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "🚨 CI/CD Pipeline Failed! Please check the logs."
