@@ -53,17 +53,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Restore dependencies (Java)
+        if: contains(github.ref, 'java')
+        run: mvn dependency:resolve
+
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
         run: mvn test
         continue-on-error: true
 
+      - name: Debug: Check Surefire Reports Directory
+        run: ls -la target/ || echo "No target directory found"
+
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ github.ref_name }}-${{ github.sha }}
-          path: |
-            target/surefire-reports/
+          path: target/surefire-reports/
+          if-no-files-found: warn  # Logs a warning instead of failing the pipeline
 
       - name: Run Code Coverage (JaCoCo)
         run: mvn org.jacoco:jacoco-maven-plugin:0.8.10:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.10:report
