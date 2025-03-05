@@ -57,12 +57,12 @@ jobs:
         if: contains(github.ref, 'java')
         run: mvn dependency:resolve
 
-      - name: Verify Maven Surefire Plugin
-        run: mvn help:effective-pom | grep surefire || echo "Surefire plugin not found!"
+      # - name: Verify Maven Surefire Plugin
+      #   run: mvn help:effective-pom | grep surefire || echo "Surefire plugin not found!"
 
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
-        run: mvn test --fail-at-end
+        run: mvn test 
         continue-on-error: true
 
       - name: Debug Target Directory
