@@ -57,13 +57,22 @@ jobs:
         if: contains(github.ref, 'java')
         run: mvn dependency:resolve
 
+      - name: Verify Maven Surefire Plugin
+        run: mvn help:effective-pom | grep surefire || echo "Surefire plugin not found!"
+
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
-        run: mvn test
+        run: mvn test --fail-at-end
         continue-on-error: true
 
+      - name: Debug Target Directory
+        run: ls -R target || echo "No target directory found"
+
       - name: Debug Surefire Reports Directory
-        run: ls -la target/surefire-reports/
+        run: ls -la target/surefire-reports/ || echo "Surefire reports directory missing!"
+
+      - name: Display Maven Test Logs
+        run: cat target/surefire-reports/*.txt || echo "No test logs found"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -82,23 +91,6 @@ jobs:
           path: |
             **/coverage/
             **/target/site/jacoco/
-
-  # static_analysis:
-  #   runs-on: self-hosted
-  #   needs: build
-
-  #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
-
-  #     - name: Run SonarCloud Analysis
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #       run: |
-  #         sonar-scanner \
-  #           -Dsonar.projectKey=my_project \
-  #           -Dsonar.organization=my_org \
-  #           -Dsonar.host.url=https://sonarcloud.io
 
   deploy:
     runs-on: self-hosted
