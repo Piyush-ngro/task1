@@ -35,7 +35,7 @@ jobs:
 
       - name: Build the application (Java)
         if: contains(github.ref, 'java')
-        run: mvn clean package -DskipTests
+        run: mvn clean package 
 
       - name: Upload Build Artifacts with Versioning
         uses: actions/upload-artifact@v4
