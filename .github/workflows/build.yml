@@ -49,7 +49,7 @@ jobs:
         run: |
           VERSION_NAME="${{ github.ref_name == 'main' && 'release-' || github.ref_name == 'develop' && 'develop-latest' || 'feature-' }}${{ github.ref_name }}-${{ github.sha }}"
           echo "Artifact Version: $VERSION_NAME"
-          mv **/target/*.jar **/target/$VERSION_NAME.jar
+          mv **/target/*.war **/target/$VERSION_NAME.war
 
   test:
     runs-on: self-hosted
