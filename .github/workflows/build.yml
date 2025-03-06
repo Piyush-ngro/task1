@@ -42,8 +42,7 @@ jobs:
         with:
           name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
           path: |
-            **/bin/Release/
-            **/target/
+            **/target/*.war
 
       # - name: Set Artifact Version
       #   run: |
