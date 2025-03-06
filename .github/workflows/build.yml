@@ -1,7 +1,7 @@
 name: Advanced CI Pipeline
 
 on:
-  workflow_dispatch:  # Enables manual trigger from GitHub Actions UI
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -12,7 +12,7 @@ on:
       - main
       - develop
   schedule:
-    - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST
+    - cron: "30 11 * * 3,5"
 
 jobs:
   build:
@@ -23,18 +23,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Java
-        if: contains(github.ref, 'java')
+        if: hashFiles('pom.xml') != ''
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Restore dependencies (Java)
-        if: contains(github.ref, 'java')
+        if: hashFiles('pom.xml') != ''
         run: mvn dependency:resolve
 
       - name: Build the application (Java)
-        if: contains(github.ref, 'java')
+        if: hashFiles('pom.xml') != ''
         run: mvn clean package
 
       - name: Upload Build Artifacts with Versioning
@@ -60,26 +60,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Restore dependencies (Java)
-        if: contains(github.ref, 'java')
+        if: hashFiles('pom.xml') != ''
         run: mvn dependency:resolve
 
       - name: Run JUnit Tests (Java)
-        if: contains(github.ref, 'java')
+        if: hashFiles('pom.xml') != ''
         run: mvn test
         continue-on-error: true
 
       - name: Generate test report
         run: mvn surefire-report:report
-        continue-on-error: true  # Even if tests fail, generate the report
+        continue-on-error: true
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ github.ref_name }}-${{ github.sha }}
           path: target/surefire-reports/
-          if-no-files-found: warn  # Logs a warning instead of failing the pipeline
+          if-no-files-found: warn
 
       - name: Run Code Coverage (JaCoCo)
+        if: hashFiles('pom.xml') != ''
         run: mvn org.jacoco:jacoco-maven-plugin:0.8.10:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.10:report
 
       - name: Upload Coverage Reports
@@ -93,7 +94,7 @@ jobs:
   deploy:
     runs-on: self-hosted
     needs: test
-    if: success()  # Skip deployment if tests or static analysis fail
+    if: success()
 
     steps:
       - name: Deploy Application
@@ -102,7 +103,7 @@ jobs:
   notify:
     runs-on: self-hosted
     needs: [build, test, deploy]
-    if: failure()  # Runs only if any of the previous jobs fail
+    if: failure()
     steps:
       - name: Send Failure Notification via Email
         uses: dawidd6/action-send-mail@v3
