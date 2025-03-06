@@ -57,9 +57,6 @@ jobs:
         if: contains(github.ref, 'java')
         run: mvn dependency:resolve
 
-      # - name: Verify Maven Surefire Plugin
-      #   run: mvn help:effective-pom | grep surefire || echo "Surefire plugin not found!"
-
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
         run: mvn test 
@@ -68,15 +65,6 @@ jobs:
       - name: Generate test report
         run: mvn surefire-report:report
         continue-on-error: true  # Even if tests fail, generate the report
-
-      # - name: Debug Target Directory
-      #   run: ls -R target || echo "No target directory found"
-
-      # - name: Debug Surefire Reports Directory
-      #   run: ls -la target/surefire-reports/ || echo "Surefire reports directory missing!"
-
-      # - name: Display Maven Test Logs
-      #   run: cat target/surefire-reports/*.txt || echo "No test logs found"
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -105,14 +93,19 @@ jobs:
       - name: Deploy Application
         run: echo "Deploying application..."
   
-  # notify:
-  #   runs-on: self-hosted
-  #   needs: [build, test, static_analysis, deploy]
-  #   if: failure()  # Only runs if any previous step failed
-
-  #   steps:
-  #     - name: Send Slack Notification
-  #       uses: rtCamp/action-slack-notify@v2
-  #       env:
-  #         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-  #         SLACK_MESSAGE: "🚨 CI/CD Pipeline Failed! Please check the logs."
+  notify:
+    runs-on: self-hosted
+    needs: [build, test, deploy]
+    if: failure()  # Runs only if any of the previous jobs fail
+    steps:
+      - name: Send Failure Notification via Email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "🚨 Build Failed: ${{ github.repository }}"
+          body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: "GitHub Actions Bot"
