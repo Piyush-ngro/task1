@@ -96,7 +96,7 @@ jobs:
   notify:
     runs-on: self-hosted
     needs: [build, test, deploy]
-    if: failure()  # Runs only if any of the previous jobs fail
+    if: always()  # Runs only if any of the previous jobs fail
     steps:
       - name: Send Failure Notification via Email
         uses: dawidd6/action-send-mail@v3
