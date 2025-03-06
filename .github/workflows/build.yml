@@ -11,8 +11,8 @@ on:
     branches:
       - main
       - develop
-  # schedule:
-  #   - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST
+  schedule:
+    - cron: "30 11 * * 3,5"  # Runs every Wednesday and Friday at 5 PM IST
 
 jobs:
   build:
@@ -44,6 +44,15 @@ jobs:
           path: |
             **/bin/Release/
             **/target/
+          
+        # Automatically version the build artifacts based on the branch name and commit hash
+        env:
+          VERSION_NAME: |
+            ${{ github.ref_name == 'main' && 'release-' || github.ref_name == 'develop' && 'develop-latest' || 'feature-' + github.ref_name }}-${{ github.sha }}
+        run: |
+          echo "Artifact Version: $VERSION_NAME"
+          # Example of what the versioned artifact file might be named
+          mv **/target/*.jar **/target/$VERSION_NAME.jar
 
   test:
     runs-on: self-hosted
