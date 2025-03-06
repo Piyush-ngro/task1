@@ -35,7 +35,7 @@ jobs:
 
       - name: Build the application (Java)
         if: contains(github.ref, 'java')
-        run: mvn clean package 
+        run: mvn clean package
 
       - name: Upload Build Artifacts with Versioning
         uses: actions/upload-artifact@v4
@@ -44,14 +44,11 @@ jobs:
           path: |
             **/bin/Release/
             **/target/
-          
-        # Automatically version the build artifacts based on the branch name and commit hash
-        env:
-          VERSION_NAME: |
-            ${{ github.ref_name == 'main' && 'release-' || github.ref_name == 'develop' && 'develop-latest' || 'feature-' + github.ref_name }}-${{ github.sha }}
+
+      - name: Set Artifact Version
         run: |
+          VERSION_NAME="${{ github.ref_name == 'main' && 'release-' || github.ref_name == 'develop' && 'develop-latest' || 'feature-' + github.ref_name }}-${{ github.sha }}"
           echo "Artifact Version: $VERSION_NAME"
-          # Example of what the versioned artifact file might be named
           mv **/target/*.jar **/target/$VERSION_NAME.jar
 
   test:
@@ -68,7 +65,7 @@ jobs:
 
       - name: Run JUnit Tests (Java)
         if: contains(github.ref, 'java')
-        run: mvn test 
+        run: mvn test
         continue-on-error: true
 
       - name: Generate test report
@@ -101,7 +98,7 @@ jobs:
     steps:
       - name: Deploy Application
         run: echo "Deploying application..."
-  
+
   notify:
     runs-on: self-hosted
     needs: [build, test, deploy]
