@@ -93,9 +93,42 @@ jobs:
       - name: Deploy Application
         run: echo "Deploying application..."
 
+  upload-artifacts-to-artifactory:
+    runs-on: self-hosted
+    needs: deploy
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
+          path: artifacts/
+
+      - name: Install JFrog CLI
+        run: |
+          curl -fL https://getcli.jfrog.io | sh
+          chmod +x jfrog
+          mv jfrog /usr/local/bin/
+
+      - name: Configure JFrog CLI
+        run: |
+          jfrog config add artifactory \
+            --url=${{ secrets.JFROG_URL }} \
+            --user=${{ secrets.JFROG_USERNAME }} \
+            --password=${{ secrets.JFROG_PASSWORD }} \
+            --interactive=false
+
+      - name: Upload artifacts to Artifactory
+        run: |
+          jfrog rt u "artifacts/*.war" "your-artifactory-repo/${{ github.ref_name }}/"
+
   notify:
     runs-on: self-hosted
-    needs: [build, test, deploy]
+    needs: [build, test, deploy, upload-artifacts-to-artifactory]
     if: failure()
     
     steps:
@@ -152,3 +185,4 @@ jobs:
             -Dsonar.organization=$SONAR_ORG \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.qualitygate.wait=true  # Fails the build if SonarCloud detects issues
