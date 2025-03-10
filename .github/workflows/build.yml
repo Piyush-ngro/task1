@@ -115,3 +115,42 @@ jobs:
           body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: "GitHub Actions Bot"
+  
+      name: Build and analyze
+      runs-on: self-hosted
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+        
+        - name: Set up JDK 17
+          uses: actions/setup-java@v4
+          with:
+            java-version: 17
+            distribution: 'zulu'
+        
+        - name: Cache SonarCloud packages
+          uses: actions/cache@v4
+          with:
+            path: ~/.sonar/cache
+            key: ${{ runner.os }}-sonar
+            restore-keys: ${{ runner.os }}-sonar
+        
+        - name: Cache Maven packages
+          uses: actions/cache@v4
+          with:
+            path: ~/.m2
+            key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+            restore-keys: ${{ runner.os }}-m2
+        
+        - name: Build and analyze
+          env:
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
+            SONAR_ORG: ${{ secrets.SONAR_ORG }}
+          run: |
+            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+              -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+              -Dsonar.organization=$SONAR_ORG \
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=$SONAR_TOKEN
