@@ -84,14 +84,14 @@ jobs:
             **/coverage/
             **/target/site/jacoco/
 
-  deploy:
-    runs-on: self-hosted
-    needs: test
-    if: success()
+  # deploy:
+  #   runs-on: self-hosted
+  #   needs: test
+  #   if: success()
 
-    steps:
-      - name: Deploy Application
-        run: echo "Deploying application..."
+  #   steps:
+  #     - name: Deploy Application
+  #       run: echo "Deploying application..."
 
   upload-artifacts-to-artifactory:
     runs-on: self-hosted
@@ -102,33 +102,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
-          path: artifacts/
-
-      - name: Install JFrog CLI
+      # - name: Download build artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
+      #     path: artifacts/
+      
+        env:
+            JF_ENV_1: ${{ secrets.JFROG_ACCESS_TOKEN }}
+      - name: Setup JFrog
+        uses: jfrog/setup-jfrog-cli@v4
         run: |
-          curl -fL https://getcli.jfrog.io | sh
-          chmod +x jfrog
-          mv jfrog /usr/local/bin/
+            # Ping the server
+            jf rt ping
 
-      - name: Configure JFrog CLI
+      - name: JFrog Artifactory Publish
         run: |
-          jfrog config add artifactory \
-            --url=${{ secrets.JFROG_URL }} \
-            --user=${{ secrets.JFROG_USERNAME }} \
-            --password=${{ secrets.JFROG_PASSWORD }} \
-            --interactive=false
+          jfrog rt u "**/*.war" ${{ secrets.JF_ARTIFACTORY_REPO }}/$(date +%Y-%m-%d_%H-%M-%S)/ --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
 
-      - name: Upload artifacts to Artifactory
-        run: |
-          jfrog rt u "artifacts/*.war" "your-artifactory-repo/${{ github.ref_name }}/"
+      
 
   notify:
     runs-on: self-hosted
-    needs: [build, test, deploy, upload-artifacts-to-artifactory]
+    needs: [build, test, upload-artifacts-to-artifactory]
     if: failure()
     
     steps:
