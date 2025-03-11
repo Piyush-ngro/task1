@@ -35,88 +35,29 @@ jobs:
       if: hashFiles('pom.xml') != ''
       run: mvn clean package -Dorg.apache.jasper.compiler.disableTldScan=true
 
-    - name: Upload Build Artifacts with Versioning
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
-        path: target/*.war
-
     - name: Run JUnit Tests (Java)
       if: hashFiles('pom.xml') != ''
       run: mvn test
       continue-on-error: true
 
-    - name: Generate test report
-      run: mvn surefire-report:report
-      continue-on-error: true
-
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ github.ref_name }}-${{ github.sha }}
-        path: target/surefire-reports/
-        if-no-files-found: warn
-
-    - name: Run Code Coverage (JaCoCo)
-      if: hashFiles('pom.xml') != ''
-      run: mvn org.jacoco:jacoco-maven-plugin:0.8.10:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.10:report
-
-    - name: Upload Coverage Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
-        path: |
-          **/coverage/
-          **/target/site/jacoco/
-
-  upload-artifacts-to-artifactory:
-    needs: build_and_test
-    runs-on: self-hosted
-
-    env:
-      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-    steps:
-    - name: JFrog Artifactory Setup
-      uses: jfrog/setup-jfrog-cli@v4
-
-    - name: JFrog Artifactory Publish
-      run: |
-        jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
-
-  sonarcloud:
-    name: Build and analyze
-    runs-on: self-hosted
-    needs: build_and_test # Ensure tests pass before SonarCloud analysis
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Cache SonarCloud packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-
-    - name: Build and analyze
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-        SONAR_ORG: ${{ secrets.SONAR_ORG }}
-      run: |
-        mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+      with:
+        projectBaseDir: .
+        args: >
           -Dsonar.projectKey=$SONAR_PROJECT_KEY \
           -Dsonar.organization=$SONAR_ORG \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=$SONAR_TOKEN
-          -Dsonar.qualitygate.wait=true  # Fails the build if SonarCloud 
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.verbose=true
+          -Dsonar.java.binaries=target/classes
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+
+
+ 
+ 
+
+
+   
