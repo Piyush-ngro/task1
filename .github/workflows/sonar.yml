@@ -33,7 +33,7 @@ jobs:
 
     - name: Build the application (Java)
       if: hashFiles('pom.xml') != ''
-      run: mvn clean package -Dorg.apache.jasper.compiler.disableTldScan=true
+      run: mvn clean package 
 
     - name: Run JUnit Tests (Java)
       if: hashFiles('pom.xml') != ''
