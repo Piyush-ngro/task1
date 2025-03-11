@@ -15,7 +15,7 @@ on:
   - cron: "30 11 * * 3,5"
 
 jobs:
-  build:
+  build and test:
     runs-on: self-hosted
 
     steps:
@@ -43,14 +43,6 @@ jobs:
         name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
         path: |
           **/target/*.war
-
-  test:
-    runs-on: self-hosted
-    needs: build
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
 
     - name: Restore dependencies (Java)
       if: hashFiles('pom.xml') != ''
