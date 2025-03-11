@@ -15,7 +15,7 @@ on:
   - cron: "30 11 * * 3,5"
 
 jobs:
-  build and test:
+  build_and_test:
     runs-on: self-hosted
 
     steps:
@@ -118,7 +118,7 @@ jobs:
 
   notify:
     runs-on: self-hosted
-    needs: [ build and test, upload-artifacts-to-artifactory ]
+    needs: [ build_and_test, upload-artifacts-to-artifactory ]
     if: failure()
 
     steps:
@@ -137,7 +137,7 @@ jobs:
   sonarcloud:
     name: Build and analyze
     runs-on: self-hosted
-    needs: build and test # Ensure tests pass before SonarCloud analysis
+    needs: build_and_test # Ensure tests pass before SonarCloud analysis
 
     steps:
     - uses: actions/checkout@v4
