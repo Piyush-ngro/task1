@@ -94,35 +94,35 @@ jobs:
   #       run: echo "Deploying application..."
 
   upload-artifacts-to-artifactory:
-  runs-on: self-hosted
-  if: success()
+    runs-on: self-hosted
+    if: success()
 
-  steps:
-  - name: Checkout repository
-    uses: actions/checkout@v4
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-  # - name: Download build artifacts
-  #   uses: actions/download-artifact@v4
-  #   with:
-  #     name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
-  #     path: artifacts/
+    # - name: Download build artifacts
+    #   uses: actions/download-artifact@v4
+    #   with:
+    #     name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
+    #     path: artifacts/
 
-  - name: Set JFrog Environment Variable
-    run: echo "JF_ENV_1=${{ secrets.JFROG_ACCESS_TOKEN }}" >> $GITHUB_ENV
+    - name: Set JFrog Environment Variable
+      run: echo "JF_ENV_1=${{ secrets.JFROG_ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-  - name: Setup JFrog
-    uses: jfrog/setup-jfrog-cli@v4
+    - name: Setup JFrog
+      uses: jfrog/setup-jfrog-cli@v4
 
-  - name: Test JFrog Connection
-    run: |
-      # Ping the server
-      jf rt ping
+    - name: Test JFrog Connection
+      run: |
+        # Ping the server
+        jf rt ping
 
-  - name: JFrog Artifactory Publish
-    run: |
-      jf rt u "**/*.war" ${{ secrets.JF_ARTIFACTORY_REPO }}/$(date +%Y-%m-%d_%H-%M-%S)/ \
-        --build-name=${{ github.run_id }} \
-        --build-number=${{ github.run_number }}
+    - name: JFrog Artifactory Publish
+      run: |
+        jf rt u "**/*.war" ${{ secrets.JF_ARTIFACTORY_REPO }}/$(date +%Y-%m-%d_%H-%M-%S)/ \
+          --build-name=${{ github.run_id }} \
+          --build-number=${{ github.run_number }}
 
   notify:
     runs-on: self-hosted
