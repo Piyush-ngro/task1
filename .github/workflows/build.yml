@@ -112,7 +112,7 @@ jobs:
 
     - name: JFrog Artifactory Publish
       run: |
-        jf rt u "**/*.war" ${{ secrets.JF_ARTIFACTORY_REPO }}/$(date +%Y-%m-%d_%H-%M-%S)/ \
+        jf rt u "**/*.war" ${{ secrets.ARTIFACTORY_URL }}/$(date +%Y-%m-%d_%H-%M-%S)/ \
           --build-name=${{ github.run_id }} \
           --build-number=${{ github.run_number }}
 
