@@ -47,8 +47,8 @@ jobs:
       with:
         projectBaseDir: .
         args: >
-          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-          -Dsonar.organization=$SONAR_ORG \
+          -Dsonar.projectKey=Piyush-ngro_maven_mvc Maven Webapp
+          -Dsonar.organization=Piyush-ngro
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.verbose=true
           -Dsonar.java.binaries=target/classes
