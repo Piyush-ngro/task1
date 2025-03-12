@@ -43,10 +43,6 @@ jobs:
         name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
         path: target/*.war
 
-    - name: Restore dependencies (Java)
-      if: hashFiles('pom.xml') != ''
-      run: mvn dependency:resolve
-
     - name: Run JUnit Tests (Java)
       if: hashFiles('pom.xml') != ''
       run: mvn test
@@ -74,15 +70,6 @@ jobs:
         path: |
           **/coverage/
           **/target/site/jacoco/
-
-  # deploy:
-  #   runs-on: self-hosted
-  #   needs: test
-  #   if: success()
-
-  #   steps:
-  #     - name: Deploy Application
-  #       run: echo "Deploying application..."
 
   upload-artifacts-to-artifactory:
     needs: build_and_test
@@ -117,39 +104,19 @@ jobs:
         to: ${{ secrets.NOTIFICATION_EMAIL }}
         from: "GitHub Actions Bot"
 
-  sonarcloud:
-    name: Build and analyze
+  sonarcloud_scan:
     runs-on: self-hosted
-    needs: build_and_test # Ensure tests pass before SonarCloud analysis
+    needs: build_and_test
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - name: Cache SonarCloud packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.sonar/cache
-        key: ${{ runner.os }}-sonar
-        restore-keys: ${{ runner.os }}-sonar
-
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-
-    - name: Build and analyze
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@v2
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-        SONAR_ORG: ${{ secrets.SONAR_ORG }}
-      run: |
-        mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-          -Dsonar.organization=$SONAR_ORG \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=$SONAR_TOKEN
-          -Dsonar.qualitygate.wait=true  # Fails the build if SonarCloud detects issues
+      with:
+        projectBaseDir: .
+        args: >
+          -Dsonar.projectKey=Piyush-ngro_actions_task1 -Dsonar.organization=piyush-ngro -Dsonar.host.url=https://sonarcloud.io -Dsonar.verbose=true -Dsonar.java.binaries=target/classes -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
