@@ -1,0 +1,55 @@
+# Ignore target directory (build artifacts)
+target/
+
+# Ignore Maven build files
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# Ignore Eclipse-specific files
+.settings/
+.project
+.classpath
+
+# Ignore IDE-specific files
+.idea/
+*.iml
+*.iws
+
+# Ignore logs and temp files
+logs/
+*.log
+hs_err_pid*
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore compiled Java classes
+*.class
+
+# Ignore dependency directory (if applicable)
+dependency-reduced-pom.xml
+
+# Ignore test reports
+surefire-reports/
+test-output/
+
+# Ignore SonarQube and Jacoco reports
+.sonar/
+jacoco.exec
+target/site/
+
+# Ignore JetBrains IDE files
+*.sw?
+out/
+
+# Ignore IntelliJ IDEA modules
+*.ipr
+*.iws
+*.idea/
+
+# Ignore VS Code settings
+.vscode/
