@@ -113,10 +113,10 @@ jobs:
       uses: actions/checkout@v4
 
     - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v2
+      uses: SonarSource/sonarcloud-github-action@master
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         projectBaseDir: .
         args: >
-          -Dsonar.projectKey=Piyush-ngro_actions_task1 -Dsonar.organization=piyush-ngro -Dsonar.host.url=https://sonarcloud.io -Dsonar.verbose=true -Dsonar.java.binaries=target/classes -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.projectKey=Piyush-ngro_actions_task1  -Dsonar.organization=piyush-ngro  -Dsonar.host.url=https://sonarcloud.io  -Dsonar.java.binaries=target/classes  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
