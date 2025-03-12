@@ -30,39 +30,47 @@ jobs:
       with:
         name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
         path: target/*.war
-  # build_and_test:
+
+  test:
+    runs-on: self-hosted
+    needs: build # Runs after build is successful
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run JUnit Tests
+      if: hashFiles('pom.xml') != ''
+      run: mvn test
+      continue-on-error: true
+
+    - name: Generate Test Report
+      run: mvn surefire-report:report
+      continue-on-error: true
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ github.ref_name }}-${{ github.sha }}
+        path: target/surefire-reports/
+        if-no-files-found: warn
+  # code_coverage:
   #   runs-on: self-hosted
-  #   needs: build  # This job runs after build
+  #   needs: test # Runs after test job completes
 
   #   steps:
-  #     - name: Checkout repository
-  #       uses: actions/checkout@v4
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
 
-  #     - name: Run JUnit Tests
-  #       if: hashFiles('pom.xml') != ''
-  #       run: mvn test
-  #       continue-on-error: true
+  #   - name: Run Code Coverage (JaCoCo)
+  #     if: hashFiles('pom.xml') != ''
+  #     run: |
+  #       mvn clean verify
+  #       mvn org.jacoco:jacoco-maven-plugin:report
 
-  #     - name: Generate Test Report
-  #       run: mvn surefire-report:report
-  #       continue-on-error: true
-
-  #     - name: Upload Test Results
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: test-results-${{ github.ref_name }}-${{ github.sha }}
-  #         path: target/surefire-reports/
-  #         if-no-files-found: warn
-
-  #     - name: Run Code Coverage (JaCoCo)
-  #       if: hashFiles('pom.xml') != ''
-  #       run: |
-  #         mvn clean verify
-  #         mvn org.jacoco:jacoco-maven-plugin:report
-
-  #     - name: Upload Coverage Reports
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
-  #         path: |
-  #           **/target/site/jacoco/jacoco.xml
+  #   - name: Upload Coverage Reports
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
+  #       path: |
+  #         **/target/site/jacoco/jacoco.xml
