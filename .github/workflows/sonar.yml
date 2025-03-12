@@ -23,7 +23,7 @@ jobs:
 
     - name: Build the application
       if: hashFiles('pom.xml') != ''
-      run: mvn clean package -Dorg.apache.jasper.compiler.disableTldScan=true
+      run: mvn clean package
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
