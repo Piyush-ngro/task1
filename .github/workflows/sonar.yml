@@ -33,20 +33,12 @@ jobs:
 
   test:
     runs-on: self-hosted
-    needs: build # Runs after build is successful
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Run JUnit Tests
-      if: hashFiles('pom.xml') != ''
-      run: mvn test
-      continue-on-error: true
-
-    - name: Generate Test Report
-      run: mvn surefire-report:report
-      continue-on-error: true
+      run: mvn clean test
 
     - name: Upload Test Results
       uses: actions/upload-artifact@v4
@@ -54,23 +46,19 @@ jobs:
         name: test-results-${{ github.ref_name }}-${{ github.sha }}
         path: target/surefire-reports/
         if-no-files-found: warn
+
   code_coverage:
     runs-on: self-hosted
-    needs: test # Runs after test job completes
-
+    needs: test
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Run Code Coverage (JaCoCo)
-      if: hashFiles('pom.xml') != ''
-      run: |
-        mvn clean verify
-        mvn org.jacoco:jacoco-maven-plugin:report
+    - name: Run Code Coverage with JaCoCo
+      run: mvn clean verify jacoco:report
 
     - name: Upload Coverage Reports
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
-        path: |
-          **/target/site/jacoco/jacoco.xml
+        path: '**/target/site/jacoco/jacoco.xml'

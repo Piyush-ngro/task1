@@ -11,8 +11,7 @@
 
   <name>maven_mvc Maven Webapp</name>
   <!-- FIXME change it to the project's website -->
-  <url>http://maven.apache.org</url>
-
+  <url>https://github.com/piyush-ngro/maven_mvc</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>8</maven.compiler.source>
@@ -49,24 +48,28 @@
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.8</version>
-        <executions>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.10</version>
+    <executions>
+        <!-- Prepare the JaCoCo agent before tests -->
         <execution>
-        <goals>
-        <goal>prepare-agent</goal>
-        </goals>
+            <id>prepare-agent</id>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
         </execution>
+        <!-- Generate the JaCoCo report -->
         <execution>
-        <id>report</id>
-        <phase>test</phase>
-        <goals>
-        <goal>report</goal>
-        </goals>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
         </execution>
-        </executions>
-        </plugin>
+    </executions>
+</plugin>
+
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.4.0</version>
