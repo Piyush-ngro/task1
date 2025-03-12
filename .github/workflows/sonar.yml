@@ -64,7 +64,7 @@ jobs:
         path: '**/target/site/jacoco/jacoco.xml'
 
   upload-artifacts-to-artifactory:
-    needs: build_and_test
+    needs: [ build, test, code_coverage ]
     runs-on: self-hosted
 
     env:
