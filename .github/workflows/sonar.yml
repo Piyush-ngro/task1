@@ -5,122 +5,64 @@ on:
   push:
     branches:
     - main
-    # - develop
-    # - feature-*
   pull_request:
     branches:
     - main
-    # - develop
-    # schedule:
-    # - cron: "30 11 * * 3,5"
 
 jobs:
-  build_and_test:
+  build:
     runs-on: self-hosted
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Java
-      if: hashFiles('pom.xml') != ''
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Restore dependencies (Java)
+    - name: Restore dependencies
       if: hashFiles('pom.xml') != ''
       run: mvn dependency:resolve
 
-    - name: Build the application (Java)
+    - name: Build the application
       if: hashFiles('pom.xml') != ''
       run: mvn clean package -Dorg.apache.jasper.compiler.disableTldScan=true
 
-    - name: Upload Build Artifacts with Versioning
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: build-artifacts-${{ github.ref_name }}-${{ github.sha }}
         path: target/*.war
-
-    - name: Run JUnit Tests (Java)
-      if: hashFiles('pom.xml') != ''
-      run: mvn test
-      continue-on-error: true
-
-    - name: Generate test report
-      run: mvn surefire-report:report
-      continue-on-error: true
-
-    - name: Upload Test Results
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ github.ref_name }}-${{ github.sha }}
-        path: target/surefire-reports/
-        if-no-files-found: warn
-
-    - name: Run Code Coverage (JaCoCo)
-      if: hashFiles('pom.xml') != ''
-      run: |
-        mvn clean verify
-        mvn org.jacoco:jacoco-maven-plugin:report
-
-    - name: Upload Coverage Reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
-        path: |
-          **/target/site/jacoco/jacoco.xml
-  # upload-artifacts-to-artifactory:
-  #   needs: build_and_test
+  # build_and_test:
   #   runs-on: self-hosted
-
-  #   env:
-  #     JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+  #   needs: build  # This job runs after build
 
   #   steps:
-  #   - name: JFrog Artifactory Setup
-  #     uses: jfrog/setup-jfrog-cli@v4
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-  #   - name: JFrog Artifactory Publish
-  #     run: |
-  #       jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
+  #     - name: Run JUnit Tests
+  #       if: hashFiles('pom.xml') != ''
+  #       run: mvn test
+  #       continue-on-error: true
 
-  # notify:
-  #   runs-on: self-hosted
-  #   needs: [ build_and_test, upload-artifacts-to-artifactory ]
-  #   if: failure()
+  #     - name: Generate Test Report
+  #       run: mvn surefire-report:report
+  #       continue-on-error: true
 
-  #   steps:
-  #   - name: Send Failure Notification via Email
-  #     uses: dawidd6/action-send-mail@v3
-  #     with:
-  #       server_address: ${{ secrets.SMTP_SERVER }}
-  #       server_port: ${{ secrets.SMTP_PORT }}
-  #       username: ${{ secrets.SMTP_USERNAME }}
-  #       password: ${{ secrets.SMTP_PASSWORD }}
-  #       subject: "🚨 Build Failed: ${{ github.repository }}"
-  #       body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
-  #       to: ${{ secrets.NOTIFICATION_EMAIL }}
-  #       from: "GitHub Actions Bot"
+  #     - name: Upload Test Results
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: test-results-${{ github.ref_name }}-${{ github.sha }}
+  #         path: target/surefire-reports/
+  #         if-no-files-found: warn
 
-  # sonarcloud_scan:
-  #   runs-on: self-hosted
-  #   needs: build_and_test
+  #     - name: Run Code Coverage (JaCoCo)
+  #       if: hashFiles('pom.xml') != ''
+  #       run: |
+  #         mvn clean verify
+  #         mvn org.jacoco:jacoco-maven-plugin:report
 
-  #   steps:
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v4
-
-  #   - name: SonarCloud Scan
-  #     uses: SonarSource/sonarcloud-github-action@master
-  #     env:
-  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  #     with:
-  #       projectBaseDir: .
-  #       args: >
-  #         -Dsonar.projectKey=Piyush-ngro_actions_task1
-  #         -Dsonar.organization=piyush-ngro
-  #         -Dsonar.host.url=https://sonarcloud.io
-  #         -Dsonar.java.binaries=target/classes
-  #         -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml
+  #     - name: Upload Coverage Reports
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
+  #         path: |
+  #           **/target/site/jacoco/jacoco.xml
