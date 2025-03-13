@@ -40,6 +40,8 @@ public class calculatorController {
             case "divide":
                 result = calculatorService.divide(num1, num2);
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid operation");
         }
         ModelAndView modelAndView = new ModelAndView("calculatorForm");
         modelAndView.addObject("result", result);
