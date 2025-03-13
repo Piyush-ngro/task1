@@ -104,8 +104,8 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Verify Coverage Report Exists
-        run: ls -l target/site/jacoco || echo "Coverage report not found"
-        
+      run: ls -l target/site/jacoco || echo "Coverage report not found"
+
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
