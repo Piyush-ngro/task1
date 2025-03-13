@@ -77,21 +77,20 @@ jobs:
     - name: JFrog Artifactory Publish
       run: |
         jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
+  # notify:
+  #   runs-on: self-hosted
+  #   needs: [ build, test, code_coverage, upload-artifacts-to-artifactory ]
+  #   if: failure()
 
-  notify:
-    runs-on: self-hosted
-    needs: [ build, test, code_coverage, upload-artifacts-to-artifactory ]
-    if: failure()
-
-    steps:
-    - name: Send Failure Notification via Email
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: ${{ secrets.SMTP_SERVER }}
-        server_port: ${{ secrets.SMTP_PORT }}
-        username: ${{ secrets.SMTP_USERNAME }}
-        password: ${{ secrets.SMTP_PASSWORD }}
-        subject: "🚨 Build Failed: ${{ github.repository }}"
-        body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
-        to: ${{ secrets.NOTIFICATION_EMAIL }}
-        from: "GitHub Actions Bot"
+  #   steps:
+  #   - name: Send Failure Notification via Email
+  #     uses: dawidd6/action-send-mail@v3
+  #     with:
+  #       server_address: ${{ secrets.SMTP_SERVER }}
+  #       server_port: ${{ secrets.SMTP_PORT }}
+  #       username: ${{ secrets.SMTP_USERNAME }}
+  #       password: ${{ secrets.SMTP_PASSWORD }}
+  #       subject: "🚨 Build Failed: ${{ github.repository }}"
+  #       body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
+  #       to: ${{ secrets.NOTIFICATION_EMAIL }}
+  #       from: "GitHub Actions Bot"
