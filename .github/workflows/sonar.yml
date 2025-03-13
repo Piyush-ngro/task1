@@ -62,7 +62,6 @@ jobs:
       with:
         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
         path: '**/target/site/jacoco/jacoco.xml'
-
   # upload-artifacts-to-artifactory:
   #   needs: [ build, test, code_coverage ]
   #   runs-on: self-hosted
@@ -95,22 +94,22 @@ jobs:
   #       to: ${{ secrets.NOTIFICATION_EMAIL }}
   #       from: "GitHub Actions Bot"
 
-  sonarcloud_scan:
-    runs-on: self-hosted
-    needs: [ build, test, code_coverage ]
+  # sonarcloud_scan:
+  #   runs-on: self-hosted
+  #   needs: [ build, test, code_coverage ]
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
 
-    - name: Verify Coverage Report Exists
-      run: ls -l target/site/jacoco || echo "Coverage report not found"
+  #   - name: Verify Coverage Report Exists
+  #     run: ls -l target/site/jacoco || echo "Coverage report not found"
 
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        projectBaseDir: .
-        args: >
-          -Dsonar.projectKey=Piyush-ngro_task1  -Dsonar.organization=piyush-ngro-1  -Dsonar.host.url=https://sonarcloud.io  -Dsonar.java.binaries=target/classes  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+  #   - name: SonarCloud Scan
+  #     uses: SonarSource/sonarcloud-github-action@master
+  #     env:
+  #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #     with:
+  #       projectBaseDir: .
+  #       args: >
+  #         -Dsonar.projectKey=Piyush-ngro_task1  -Dsonar.organization=piyush-ngro-1  -Dsonar.host.url=https://sonarcloud.io  -Dsonar.java.binaries=target/classes  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
