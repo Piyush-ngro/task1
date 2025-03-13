@@ -97,7 +97,7 @@ jobs:
 
   sonarcloud_scan:
     runs-on: self-hosted
-    needs: build_and_test
+    # needs: build_and_test
 
     steps:
     - name: Checkout repository
