@@ -27,8 +27,8 @@ hs_err_pid*
 .DS_Store
 Thumbs.db
 
-# Ignore compiled Java classes
-*.class
+# # Ignore compiled Java classes
+# *.class
 
 # Ignore dependency directory (if applicable)
 dependency-reduced-pom.xml
@@ -38,9 +38,9 @@ surefire-reports/
 test-output/
 
 # Ignore SonarQube and Jacoco reports
-.sonar/
-jacoco.exec
-target/site/
+# .sonar/
+# jacoco.exec
+# target/site/
 
 # Ignore JetBrains IDE files
 *.sw?
