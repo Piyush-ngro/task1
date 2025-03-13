@@ -33,7 +33,6 @@ jobs:
 
   test:
     runs-on: self-hosted
-    needs: build
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -64,6 +63,41 @@ jobs:
         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
         path: '**/target/site/jacoco/jacoco.xml'
 
+  # Upload build artifacts to JFrog Artifactory (if enabled)
+  # upload-artifacts-to-artifactory:
+  #   needs: [ build, test, code_coverage ]
+  #   runs-on: self-hosted
+
+  #   env:
+  #     JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+  #   steps:
+  #   - name: JFrog Artifactory Setup
+  #     uses: jfrog/setup-jfrog-cli@v4
+
+  #   - name: JFrog Artifactory Publish
+  #     run: |
+  #       jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
+
+  # Send notification if the pipeline fails
+  # notify:
+  #   runs-on: self-hosted
+  #   needs: [ build, test, code_coverage, upload-artifacts-to-artifactory ]
+  #   if: failure()
+
+  #   steps:
+  #   - name: Send Failure Notification via Email
+  #     uses: dawidd6/action-send-mail@v3
+  #     with:
+  #       server_address: ${{ secrets.SMTP_SERVER }}
+  #       server_port: ${{ secrets.SMTP_PORT }}
+  #       username: ${{ secrets.SMTP_USERNAME }}
+  #       password: ${{ secrets.SMTP_PASSWORD }}
+  #       subject: "🚨 Build Failed: ${{ github.repository }}"
+  #       body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
+  #       to: ${{ secrets.NOTIFICATION_EMAIL }}
+  #       from: "GitHub Actions Bot"
+
   sonarcloud_scan:
     runs-on: self-hosted
     needs: [ build, test, code_coverage ]
@@ -72,15 +106,22 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    # Download the JaCoCo coverage report artifact
     - name: Download Coverage Report
       uses: actions/download-artifact@v4
       with:
         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
         path: target/site/jacoco/
 
+    # Verify that the coverage report exists
     - name: Verify Coverage Report Exists
       run: ls -l target/site/jacoco || echo "Coverage report not found"
 
+    # Download project dependencies to ensure SonarCloud has all required libraries
+    - name: Download Dependencies
+      run: mvn dependency:copy-dependencies -DoutputDirectory=target/dependency
+
+    # Run SonarCloud analysis
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
@@ -88,4 +129,4 @@ jobs:
       with:
         projectBaseDir: .
         args: >
-          -Dsonar.projectKey=Piyush-ngro_task1 -Dsonar.organization=piyush-ngro-1 -Dsonar.host.url=https://sonarcloud.io -Dsonar.java.binaries=target/classes -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.projectKey=Piyush-ngro_task1 -Dsonar.organization=piyush-ngro-1 -Dsonar.host.url=https://sonarcloud.io -Dsonar.java.binaries=target/classes -Dsonar.java.libraries=target/dependency/* -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
