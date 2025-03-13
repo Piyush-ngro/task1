@@ -63,20 +63,20 @@ jobs:
         name: code-coverage-${{ github.ref_name }}-${{ github.sha }}
         path: '**/target/site/jacoco/jacoco.xml'
 
-  upload-artifacts-to-artifactory:
-    needs: [ build, test, code_coverage ]
-    runs-on: self-hosted
+  # upload-artifacts-to-artifactory:
+  #   needs: [ build, test, code_coverage ]
+  #   runs-on: self-hosted
 
-    env:
-      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+  #   env:
+  #     JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    steps:
-    - name: JFrog Artifactory Setup
-      uses: jfrog/setup-jfrog-cli@v4
+  #   steps:
+  #   - name: JFrog Artifactory Setup
+  #     uses: jfrog/setup-jfrog-cli@v4
 
-    - name: JFrog Artifactory Publish
-      run: |
-        jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
+  #   - name: JFrog Artifactory Publish
+  #     run: |
+  #       jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
   # notify:
   #   runs-on: self-hosted
   #   needs: [ build, test, code_coverage, upload-artifacts-to-artifactory ]
@@ -94,3 +94,20 @@ jobs:
   #       body: "The latest build of ${{ github.repository }} has failed. Please check the logs in GitHub Actions."
   #       to: ${{ secrets.NOTIFICATION_EMAIL }}
   #       from: "GitHub Actions Bot"
+
+  sonarcloud_scan:
+    runs-on: self-hosted
+    needs: build_and_test
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        projectBaseDir: .
+        args: >
+          -Dsonar.projectKey=Piyush-ngro_task1  -Dsonar.organization=piyush-ngro-1  -Dsonar.host.url=https://sonarcloud.io  -Dsonar.java.binaries=target/classes  -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
