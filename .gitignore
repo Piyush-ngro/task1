@@ -1,5 +1,5 @@
-# Ignore target directory (build artifacts)
-target/
+# # Ignore target directory (build artifacts)
+# target/
 
 # Ignore Maven build files
 pom.xml.tag
