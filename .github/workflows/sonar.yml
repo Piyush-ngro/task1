@@ -103,6 +103,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Verify Coverage Report Exists
+        run: ls -l target/site/jacoco || echo "Coverage report not found"
+        
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
       env:
