@@ -1,26 +1,157 @@
 trigger:
-- main
+  branches:
+    include:
+    - main
+
+pr:
+  branches:
+    include:
+    - main
 
 pool:
-  name: Default  
-  demands:
-    - Agent.Name -equals vbox 
+  name: Default # Ensure your self-hosted CentOS agent is in this pool
 
-steps:
-- task: Maven@3
-  displayName: "Build and Run Tests"
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'Path'  # Tell Azure DevOps to use the system-installed JDK
-    jdkDirectory: "/usr/lib/jvm/java-11-openjdk"  # Change this to the actual JDK path
-    goals: 'clean package'
-    publishJUnitResults: true
-    testResultsFiles: '**/target/surefire-reports/TEST-*.xml'
-    codeCoverageToolOption: 'JaCoCo'
+stages:
+- stage: Build
+  displayName: "Build Stage"
+  jobs:
+  - job: Build
+    displayName: "Build Application"
+    steps:
+    - checkout: self
 
-- task: PublishBuildArtifacts@1
-  displayName: "Publish Build Artifacts"
-  inputs:
-    pathToPublish: '$(Build.SourcesDirectory)/target'
-    artifactName: 'drop'
+    - script: |
+        if [ -f "pom.xml" ]; then
+          mvn dependency:resolve
+        else
+          echo "Skipping dependency resolution as pom.xml is missing."
+        fi
+      displayName: "Restore Dependencies"
+
+    - script: |
+        if [ -f "pom.xml" ]; then
+          mvn clean package
+        else
+          echo "Skipping build as pom.xml is missing."
+        fi
+      displayName: "Build the Application"
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/target/*.war'
+        artifact: 'build-artifacts'
+      displayName: "Publish Build Artifacts"
+
+- stage: Test
+  displayName: "Test Stage"
+  jobs:
+  - job: Test
+    displayName: "Run Tests"
+    steps:
+    - checkout: self
+
+    - script: mvn clean test
+      displayName: "Run JUnit Tests"
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/target/surefire-reports/'
+        artifact: 'test-results'
+      displayName: "Publish Test Results"
+
+- stage: CodeCoverage
+  displayName: "Code Coverage Stage"
+  jobs:
+  - job: CodeCoverage
+    displayName: "Run Code Coverage"
+    steps:
+    - checkout: self
+
+    - script: mvn clean verify jacoco:report
+      displayName: "Run Code Coverage with JaCoCo"
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.SourcesDirectory)/target/site/jacoco/jacoco.xml'
+        artifact: 'code-coverage'
+      displayName: "Publish Code Coverage Report"
+
+- stage: UploadToArtifactory
+  displayName: "Upload to JFrog Artifactory"
+  dependsOn:
+  - Build
+  - Test
+  - CodeCoverage
+  jobs:
+  - job: Upload
+    displayName: "Upload Build Artifacts to JFrog"
+    steps:
+    - checkout: self
+
+    - script: |
+        jfrog config add my-artifactory \
+          --url=$(ARTIFACTORY_URL) \
+          --access-token=$(JFROG_ACCESS_TOKEN) --interactive=false
+        jfrog rt ping
+        jfrog rt u "target/*.war" "your-repo-name/$(Build.BuildId)/"
+      env:
+        JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN)
+        ARTIFACTORY_URL: $(ARTIFACTORY_URL)
+      displayName: "Upload Artifact to JFrog Artifactory"
+
+- stage: SonarQubeAnalysis
+  displayName: "SonarQube Analysis"
+  dependsOn:
+  - Build
+  - Test
+  - CodeCoverage
+  jobs:
+  - job: SonarQube
+    displayName: "Run SonarCloud Scan"
+    steps:
+    - checkout: self
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'current'
+        artifact: 'code-coverage'
+        path: '$(Pipeline.Workspace)/code-coverage'
+      displayName: "Download Code Coverage Report"
+
+    - script: ls -l $(Pipeline.Workspace)/code-coverage || echo "Coverage report not found"
+      displayName: "Verify Coverage Report Exists"
+
+    - script: mvn dependency:copy-dependencies -DoutputDirectory=target/dependency
+      displayName: "Download Dependencies"
+
+    - script: |
+        mvn sonar:sonar \
+          -Dsonar.projectKey=your-sonar-project-key \
+          -Dsonar.organization=your-sonar-organization \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=$(SONAR_TOKEN) \
+          -Dsonar.java.binaries=target/classes \
+          -Dsonar.java.libraries=target/dependency/* \
+          -Dsonar.coverage.jacoco.xmlReportPaths=$(Pipeline.Workspace)/code-coverage/jacoco.xml
+      env:
+        SONAR_TOKEN: $(SONAR_TOKEN)
+      displayName: "Run SonarCloud Scan"
+
+- stage: Notify
+  displayName: "Failure Notification"
+  condition: failed()
+  jobs:
+  - job: Notify
+    displayName: "Send Failure Notification"
+    steps:
+    - script: |
+        echo "Subject: 🚨 Build Failed: $(Build.Repository.Name)" > email.txt
+        echo "The latest build of $(Build.Repository.Name) has failed. Please check the logs." >> email.txt
+        cat email.txt | sendmail -S $(SMTP_SERVER) -p $(SMTP_PORT) -au$(SMTP_USERNAME) -ap$(SMTP_PASSWORD) $(NOTIFICATION_EMAIL)
+      env:
+        SMTP_SERVER: $(SMTP_SERVER)
+        SMTP_PORT: $(SMTP_PORT)
+        SMTP_USERNAME: $(SMTP_USERNAME)
+        SMTP_PASSWORD: $(SMTP_PASSWORD)
+        NOTIFICATION_EMAIL: $(NOTIFICATION_EMAIL)
+      displayName: "Send Email Notification"

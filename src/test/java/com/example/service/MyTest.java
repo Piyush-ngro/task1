@@ -2,10 +2,9 @@ package com.example.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 public class MyTest {
 
@@ -18,26 +17,22 @@ public class MyTest {
 
     @Test
     public void addTest() {
-        double result = calculatorService.add(5, 3);
-        assertEquals(8.0, result, 0.001);
+        assertEquals(8.0, calculatorService.add(5, 3), 0.001);
     }
 
     @Test
     public void subtractTest() {
-        double result = calculatorService.subtract(10, 4);
-        assertEquals(6.0, result, 0.001);
+        assertEquals(6.0, calculatorService.subtract(10, 4), 0.001);
     }
 
     @Test
     public void multiplyTest() {
-        double result = calculatorService.multiply(6, 2);
-        assertEquals(12.0, result, 0.001);
+        assertEquals(12.0, calculatorService.multiply(6, 2), 0.001);
     }
 
     @Test
     public void divideTest() {
-        double result = calculatorService.divide(9, 3);
-        assertEquals(3.0, result, 0.001);
+        assertEquals(3.0, calculatorService.divide(9, 3), 0.001);
     }
 
     @Test
