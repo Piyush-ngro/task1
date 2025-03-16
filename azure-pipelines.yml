@@ -1,3 +1,6 @@
+variables:
+  JAVA_HOME: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
+
 trigger:
   branches:
     include:
@@ -9,7 +12,7 @@ pr:
     - main
 
 pool:
-  name: Default # Ensure your self-hosted CentOS agent is in this pool
+  name: Default
 
 stages:
 - stage: Build
@@ -19,6 +22,12 @@ stages:
     displayName: "Build Application"
     steps:
     - checkout: self
+
+    - script: |
+        export JAVA_HOME=$JAVA_HOME
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
+      displayName: "Set JAVA_HOME and Verify Java Version"
 
     - script: |
         if [ -f "pom.xml" ]; then
@@ -60,6 +69,12 @@ stages:
     steps:
     - checkout: self
 
+    - script: |
+        export JAVA_HOME=$JAVA_HOME
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
+      displayName: "Set JAVA_HOME and Verify Java Version"
+
     - script: mvn clean test
       displayName: "Run JUnit Tests"
 
@@ -76,6 +91,12 @@ stages:
     displayName: "Run Code Coverage"
     steps:
     - checkout: self
+
+    - script: |
+        export JAVA_HOME=$JAVA_HOME
+        export PATH=$JAVA_HOME/bin:$PATH
+        java -version
+      displayName: "Set JAVA_HOME and Verify Java Version"
 
     - script: mvn clean verify jacoco:report
       displayName: "Run Code Coverage with JaCoCo"
