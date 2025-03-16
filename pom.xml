@@ -1,188 +1,92 @@
-variables:
-  JAVA_HOME: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
+<?xml version="1.0" encoding="UTF-8"?>
 
-trigger:
-  branches:
-    include:
-      - main
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 
-pr:
-  branches:
-    include:
-      - main
+  <groupId>com.example</groupId>
+  <artifactId>maven_mvc</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
 
-pool:
-  name: Default
+  <name>maven_mvc Maven Webapp</name>
+  <url>https://github.com/piyush-ngro/maven_mvc</url>
 
-stages:
-- stage: Build
-  displayName: "Build Stage"
-  jobs:
-  - job: Build
-    displayName: "Build Application"
-    steps:
-    - checkout: self
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <sonar.organization>piyush-ngro</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+  </properties>
 
-    - script: |
-        export JAVA_HOME=$JAVA_HOME
-        export PATH=$JAVA_HOME/bin:$PATH
-        java -version
-      displayName: "Set JAVA_HOME and Verify Java Version"
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.1</version>
+      <scope>test</scope>
+    </dependency>
 
-    - script: |
-        if [ -f "pom.xml" ]; then
-          mvn dependency:resolve
-        else
-          echo "Skipping dependency resolution as pom.xml is missing."
-        fi
-      displayName: "Restore Dependencies"
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <version>5.3.20</version>
+    </dependency>
+  </dependencies>
 
-    - script: |
-        if [ -f "pom.xml" ]; then
-          mvn clean package
-        else
-          echo "Skipping build as pom.xml is missing."
-        fi
-      displayName: "Build the Application"
+  <build>
+    <pluginManagement>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+            </plugin>
+        </plugins>
+    </pluginManagement>
+    <plugins>
+      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>
+            <configuration>
+                <source>17</source>
+                <target>17</target>
+                <release>17</release>
+            </configuration>
+        </plugin>
 
-    - script: |
-        if ls target/*.war 1> /dev/null 2>&1; then
-          echo "WAR file found. Proceeding to upload."
-        else
-          echo "ERROR: No WAR file found in target/ directory."
-          exit 1
-        fi
-      displayName: "Verify WAR File Exists"
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>4.0.0.2929</version>
+      </plugin>
 
-    - task: PublishPipelineArtifact@1
-      condition: succeeded()
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/target/'
-        artifact: 'build-artifacts'
-      displayName: "Publish Build Artifacts"
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.10</version>
+        <executions>
+            <execution>
+                <id>prepare-agent</id>
+                <goals>
+                    <goal>prepare-agent</goal>
+                </goals>
+            </execution>
+            <execution>
+                <id>report</id>
+                <phase>verify</phase>
+                <goals>
+                    <goal>report</goal>
+                </goals>
+            </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
-- stage: Test
-  displayName: "Test Stage"
-  jobs:
-  - job: Test
-    displayName: "Run Tests"
-    steps:
-    - checkout: self
-
-    - script: |
-        export JAVA_HOME=$JAVA_HOME
-        export PATH=$JAVA_HOME/bin:$PATH
-        java -version
-      displayName: "Set JAVA_HOME and Verify Java Version"
-
-    - script: mvn clean test
-      displayName: "Run JUnit Tests"
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/target/surefire-reports/'
-        artifact: 'test-results'
-      displayName: "Publish Test Results"
-
-- stage: CodeCoverage
-  displayName: "Code Coverage Stage"
-  jobs:
-  - job: CodeCoverage
-    displayName: "Run Code Coverage"
-    steps:
-    - checkout: self
-
-    - script: |
-        export JAVA_HOME=$JAVA_HOME
-        export PATH=$JAVA_HOME/bin:$PATH
-        java -version
-      displayName: "Set JAVA_HOME and Verify Java Version"
-
-    - script: mvn clean verify jacoco:report
-      displayName: "Run Code Coverage with JaCoCo"
-
-    - task: PublishPipelineArtifact@1
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)/target/site/jacoco/jacoco.xml'
-        artifact: 'code-coverage'
-      displayName: "Publish Code Coverage Report"
-
-- stage: UploadToArtifactory
-  displayName: "Upload to JFrog Artifactory"
-  dependsOn:
-    - Build
-    - Test
-    - CodeCoverage
-  jobs:
-  - job: Upload
-    displayName: "Upload Build Artifacts to JFrog"
-    steps:
-    - checkout: self
-
-    - script: |
-        jfrog config add my-artifactory \
-          --url=$(ARTIFACTORY_URL) \
-          --access-token=$(JFROG_ACCESS_TOKEN) --interactive=false
-        jfrog rt ping
-        jfrog rt u "target/*.war" "your-repo-name/$(Build.BuildId)/"
-      env:
-        JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN)
-        ARTIFACTORY_URL: $(ARTIFACTORY_URL)
-      displayName: "Upload Artifact to JFrog Artifactory"
-
-- stage: SonarQubeAnalysis
-  displayName: "SonarQube Analysis"
-  dependsOn:
-    - Build
-    - Test
-    - CodeCoverage
-  jobs:
-  - job: SonarQube
-    displayName: "Run SonarCloud Scan"
-    steps:
-    - checkout: self
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        source: 'current'
-        artifact: 'code-coverage'
-        path: '$(Pipeline.Workspace)/code-coverage'
-      displayName: "Download Code Coverage Report"
-
-    - script: ls -l $(Pipeline.Workspace)/code-coverage || echo "Coverage report not found"
-      displayName: "Verify Coverage Report Exists"
-
-    - script: mvn dependency:copy-dependencies -DoutputDirectory=target/dependency
-      displayName: "Download Dependencies"
-
-    - script: |
-        mvn sonar:sonar \
-          -Dsonar.projectKey=Piyush-ngro_task1 \
-          -Dsonar.organization=piyush-ngro-1 \
-          -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=$(SONAR_TOKEN) \
-          -Dsonar.java.binaries=target/classes \
-          -Dsonar.java.libraries=target/dependency/* \
-          -Dsonar.coverage.jacoco.xmlReportPaths=$(Pipeline.Workspace)/code-coverage/jacoco.xml
-      env:
-        SONAR_TOKEN: $(SONAR_TOKEN)
-      displayName: "Run SonarCloud Scan"
-
-- stage: Notify
-  displayName: "Failure Notification"
-  condition: failed()
-  jobs:
-  - job: Notify
-    displayName: "Send Failure Notification"
-    steps:
-    - script: |
-        echo "Subject: 🚨 Build Failed: $(Build.Repository.Name)" > email.txt
-        echo "The latest build of $(Build.Repository.Name) has failed. Please check the logs." >> email.txt
-        cat email.txt | sendmail -S $(SMTP_SERVER) -p $(SMTP_PORT) -au$(SMTP_USERNAME) -ap$(SMTP_PASSWORD) $(NOTIFICATION_EMAIL)
-      env:
-        SMTP_SERVER: $(SMTP_SERVER)
-        SMTP_PORT: $(SMTP_PORT)
-        SMTP_USERNAME: $(SMTP_USERNAME)
-        SMTP_PASSWORD: $(SMTP_PASSWORD)
-        NOTIFICATION_EMAIL: $(NOTIFICATION_EMAIL)
-      displayName: "Send Email Notification"
+</project>
