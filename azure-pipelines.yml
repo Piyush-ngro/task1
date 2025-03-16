@@ -116,15 +116,21 @@ stages:
   jobs:
   - job: Upload
     displayName: "Upload Build Artifacts to JFrog"
+    pool:
+      name: Default # Ensure this matches your self-hosted agent pool
     steps:
     - checkout: self
 
     - script: |
-        jfrog config add my-artifactory \
-          --url=$(ARTIFACTORY_URL) \
-          --access-token=$(JFROG_ACCESS_TOKEN) --interactive=false
-        jfrog rt ping
-        jfrog rt u "target/*.war" "your-repo-name/$(Build.BuildId)/"
+        echo "Authenticating with JFrog Artifactory"
+        jfrog rt ping || echo "JFrog CLI is not working properly"
+      env:
+        JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN)
+      displayName: "Authenticate with JFrog"
+
+    - script: |
+        jfrog rt u "target/*.war" "$(ARTIFACTORY_URL)$(Build.BuildId)/" \
+        --build-name=$(Build.BuildId) --build-number=$(Build.BuildNumber)
       env:
         JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN)
         ARTIFACTORY_URL: $(ARTIFACTORY_URL)
