@@ -129,12 +129,12 @@ stages:
       displayName: "Authenticate with JFrog"
 
     - script: |
-        jfrog rt u "target/*.war" "$(ARTIFACTORY_URL)$(Build.BuildId)/" \
-        --build-name=$(Build.BuildId) --build-number=$(Build.BuildNumber)
-      env:
-        JFROG_ACCESS_TOKEN: $(JFROG_ACCESS_TOKEN)
-        ARTIFACTORY_URL: $(ARTIFACTORY_URL)
-      displayName: "Upload Artifact to JFrog Artifactory"
+        jfrog rt u "target/maven_mvc.war" \
+        "github-actions-libs-snapshot-local/$(Build.BuildId)/maven_mvc.war" \
+        --url=$(ARTIFACTORY_URL) \
+        --access-token=$(JFROG_ACCESS_TOKEN) \
+        --build-name=$(Build.BuildId) \
+        --build-number=$(Build.BuildNumber)
 
 - stage: SonarQubeAnalysis
   displayName: "SonarQube Analysis"
