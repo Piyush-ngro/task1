@@ -67,7 +67,11 @@
             <reportsDirectory>${project.build.directory}/site/jacoco</reportsDirectory>
         </configuration>
       </plugin>
-
+      <plugin>
+            <groupId>org.sonarsource.scanner.maven</groupId>
+            <artifactId>sonar-maven-plugin</artifactId>
+            <version>4.0.0.4121</version> <!-- Use the latest version if available -->
+        </plugin>
       <!-- Surefire Plugin to Ensure Tests Run -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
