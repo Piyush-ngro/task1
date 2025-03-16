@@ -36,9 +36,19 @@ stages:
         fi
       displayName: "Build the Application"
 
+    - script: |
+        if ls target/*.war 1> /dev/null 2>&1; then
+          echo "WAR file found. Proceeding to upload."
+        else
+          echo "ERROR: No WAR file found in target/ directory."
+          exit 1
+        fi
+      displayName: "Verify WAR File Exists"
+
     - task: PublishPipelineArtifact@1
+      condition: succeeded()
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/target/*.war'
+        targetPath: '$(Build.SourcesDirectory)/target/'
         artifact: 'build-artifacts'
       displayName: "Publish Build Artifacts"
 
