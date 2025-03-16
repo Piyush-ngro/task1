@@ -42,6 +42,15 @@
   <build>
     <finalName>maven_mvc</finalName>
     <plugins>
+      <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.10.1</version>  <!-- Or latest -->
+            <configuration>
+                <source>17</source>
+                <target>17</target>
+            </configuration>
+        </plugin>
       <!-- JaCoCo Plugin (Moved Outside pluginManagement) -->
       <plugin>
         <groupId>org.jacoco</groupId>
