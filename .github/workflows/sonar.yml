@@ -91,10 +91,14 @@ jobs:
     - name: JFrog Artifactory Setup
       uses: jfrog/setup-jfrog-cli@v4
 
-    - name: JFrog Artifactory Publish
+    - name: Upload Artifact to JFrog Artifactory
       run: |
-        jfrog rt u "target/*.war" ${{ secrets.ARTIFACTORY_URL }} --build-name=${{ github.run_id }} --build-number=${{ github.run_number }}
-
+        jfrog rt u "target/maven_mvc.war" \
+        "github-actions-libs-snapshot-local/${{ github.run_id }}/maven_mvc.war" \
+        --url=${{ secrets.ARTIFACTORY_URL }} \
+        --access-token=${{ secrets.JFROG_ACCESS_TOKEN }} \
+        --build-name=${{ github.run_id }} \
+        --build-number=${{ github.run_number }}
   notify:
     runs-on: self-hosted
     needs: [ build, test, code_coverage, upload-artifacts-to-artifactory ]
