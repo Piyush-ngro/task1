@@ -9,12 +9,13 @@ on:
     branches:
     - main
 
+env:
+  JAVA_HOME: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
+  PATH: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64/bin:/usr/bin:$PATH'
+
 jobs:
   build:
     runs-on: self-hosted
-    env:
-      JAVA_HOME: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
-      PATH: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64/bin:/usr/bin:$PATH'
 
     steps:
     - name: Checkout repository
