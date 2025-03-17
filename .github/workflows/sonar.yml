@@ -12,18 +12,19 @@ on:
 jobs:
   build:
     runs-on: self-hosted
-
+    env:
+      JAVA_HOME: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
+      PATH: '/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64/bin:$PATH'
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Set up Java Environment
+    - name: Verify Java installation
       run: |
-        echo "Setting JAVA_HOME..."
-        export JAVA_HOME='/usr/lib/jvm/java-17-openjdk-17.0.14.0.7-2.el9.x86_64'
-        export PATH="$JAVA_HOME/bin:$PATH"
         echo "JAVA_HOME is set to: $JAVA_HOME"
+        echo "Path: $PATH"
         java -version
+        mvn -version
 
     - name: Restore dependencies
       if: hashFiles('pom.xml') != ''
