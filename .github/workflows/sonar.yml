@@ -137,13 +137,12 @@ jobs:
       run: mvn dependency:copy-dependencies -DoutputDirectory=target/dependency
 
     # Run SonarCloud analysis
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v2
-      # uses: SonarSource/sonarcloud-github-action@master
-
+    - name: Run SonarCloud Analysis with Maven
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        projectBaseDir: .
-        args: >
-          -Dsonar.projectKey=Piyush-ngro_task1 -Dsonar.organization=piyush-ngro-1 -Dsonar.host.url=https://sonarcloud.io -Dsonar.java.binaries=target/classes -Dsonar.java.libraries=target/dependency/* -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+      run: |
+        mvn clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=Piyush-ngro_task1 \
+          -Dsonar.organization=piyush-ngro-1 \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
