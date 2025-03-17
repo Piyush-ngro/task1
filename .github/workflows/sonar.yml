@@ -32,11 +32,18 @@ jobs:
         path: target/*.war
 
   test:
+    needs: build
     runs-on: self-hosted
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Verify Java installation
+      run: |
+        echo "JAVA_HOME is set to: $JAVA_HOME"
+        java -version
+        echo "Path: $PATH"
 
     - name: Run JUnit Tests
       run: mvn clean test
