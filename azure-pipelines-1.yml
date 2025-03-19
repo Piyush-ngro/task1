@@ -4,7 +4,7 @@ trigger:
 pool:
   name: Default
   demands:
-  - agent.name -equals vbox 
+  - agent.name -equals vbox
 
 steps:
 - task: JFrogGenericArtifacts@1
@@ -23,7 +23,6 @@ steps:
         ]
       }
     failNoOp: true
-    
 
 - task: Docker@2
   inputs:
