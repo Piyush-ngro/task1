@@ -1,0 +1,34 @@
+trigger:
+- main
+
+pool:
+  name: Default
+  demands:
+  - agent.name -equals vbox 
+
+steps:
+- task: JFrogGenericArtifacts@1
+  inputs:
+    command: 'Download'
+    connection: 'Jfrogartifactory'
+    specSource: 'taskConfiguration'
+    fileSpec: |
+      {
+        "files": [
+          {
+            "pattern": "maven_azure-libs-snapshot-local/maven_mvc.war/",
+            "target": "$(System.ArtifactorysDirectory)/drop/",
+            "flat": "true"
+          }
+        ]
+      }
+    failNoOp: true
+    
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'azure_maven'
+    repository: 'maven_azure'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    buildContext: '$(System.ArtifactorysDirectory)'
