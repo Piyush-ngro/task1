@@ -190,37 +190,3 @@ stages:
         SMTP_PASSWORD: $(SMTP_PASSWORD)
         NOTIFICATION_EMAIL: $(NOTIFICATION_EMAIL)
       displayName: "Send Email Notification"
-
-- stage: BuildDockerImage
-  displayName: "Build Docker Image"
-  dependsOn:
-  - UploadToArtifactory # Ensure this stage runs only after artifacts are uploaded
-  condition: succeeded() # Ensure this stage runs only if the previous stage succeeds
-  jobs:
-  - job: BuildDocker
-    displayName: "Build Docker Image"
-    steps:
-    - script: |
-        jfrog rt dl "maven_mvc.war" "./maven_mvc.war" --url=$(ARTIFACTORY_URL) --access-token=$(JFROG_ACCESS_TOKEN)
-      displayName: "Download WAR from JFrog"
-
-    - script: |
-        ls -lh ./maven_mvc.war
-      displayName: "Verify Downloaded Artifact"
-
-    - script: |
-        docker build -t myapp:latest .
-      displayName: "Build Docker Image"
-
-- stage: RunDockerContainer
-  displayName: "Run Docker Container"
-  dependsOn:
-  - BuildDockerImage # Ensure this stage runs only after the image is built
-  condition: succeeded() # Ensure it runs only if the previous stage succeeds
-  jobs:
-  - job: RunContainer
-    displayName: "Run Docker Container"
-    steps:
-    - script: |
-        docker run -d -p 8080:8080 --name myapp-container myapp:latest
-      displayName: "Run Docker Container"
