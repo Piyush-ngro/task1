@@ -130,7 +130,7 @@ stages:
 
     - script: |
         jfrog rt u "target/maven_mvc.war" \
-        "maven_azure-libs-snapshot-local/$(Build.BuildId)/maven_mvc.war" \
+        "maven_mvc.war" \
         --url=$(ARTIFACTORY_URL) \
         --access-token=$(JFROG_ACCESS_TOKEN)
 
