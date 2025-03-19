@@ -193,8 +193,12 @@ stages:
 
 - stage: BuildDockerImage
   displayName: "Build Docker Image"
+  dependsOn:
+  - UploadToArtifactory # Ensure this stage runs only after artifacts are uploaded
+  condition: succeeded() # Ensure this stage runs only if the previous stage succeeds
   jobs:
   - job: BuildDocker
+    displayName: "Build Docker Image"
     steps:
     - script: |
         jfrog rt dl "maven_mvc.war" "./maven_mvc.war" --url=$(ARTIFACTORY_URL) --access-token=$(JFROG_ACCESS_TOKEN)
@@ -210,8 +214,12 @@ stages:
 
 - stage: RunDockerContainer
   displayName: "Run Docker Container"
+  dependsOn:
+  - BuildDockerImage # Ensure this stage runs only after the image is built
+  condition: succeeded() # Ensure it runs only if the previous stage succeeds
   jobs:
   - job: RunContainer
+    displayName: "Run Docker Container"
     steps:
     - script: |
         docker run -d -p 8080:8080 --name myapp-container myapp:latest
