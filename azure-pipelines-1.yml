@@ -10,7 +10,7 @@ steps:
 - task: JFrogGenericArtifacts@1
   inputs:
     command: 'Download'
-    connection: 'Jfrogartifactory'
+    connection: 'mvc_azure'
     specSource: 'taskConfiguration'
     fileSpec: |
       {
