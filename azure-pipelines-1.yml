@@ -4,7 +4,7 @@ trigger:
 pool:
   name: Default
   demands:
-  - agent.name -equals vbox
+  - agent.name -equals wsl_agent
 
 steps:
 - task: JFrogGenericArtifacts@1

@@ -13,6 +13,8 @@ pr:
 
 pool:
   name: Default
+  demands:
+  - agent.name -equals linux_agent
 
 stages:
 - stage: Build
