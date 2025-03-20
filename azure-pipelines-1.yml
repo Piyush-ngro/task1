@@ -16,7 +16,7 @@ steps:
       {
         "files": [
           {
-            "pattern": "maven_azure-libs-snapshot-local/maven_mvc.war/",
+            "pattern": "maven_azure-libs-snapshot/maven_mvc.war/target/maven_mvc.war",
             "target": "$(System.ArtifactorysDirectory)/drop/",
             "flat": "true"
           }
