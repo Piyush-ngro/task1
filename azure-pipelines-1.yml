@@ -27,7 +27,7 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: 'azure_maven'
-    repository: 'maven_azure'
+    repository: 'piyush1232/maven_azure'
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
     buildContext: '$(System.ArtifactorysDirectory)'
