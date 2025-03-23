@@ -131,7 +131,7 @@ stages:
       displayName: "Authenticate with JFrog"
 
     - script: |
-        jfrog rt u "target/maven_mvc.war" \
+        jfrog rt u "target/maven_mvc-0.0.1-SNAPSHOT.war" \
         "maven_mvc.war" \
         --url=$(ARTIFACTORY_URL) \
         --access-token=$(JFROG_ACCESS_TOKEN)
