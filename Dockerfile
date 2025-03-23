@@ -9,4 +9,5 @@ COPY target/maven_mvc-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps/
 EXPOSE 8080
  
 # Start Tomcat
+
 CMD ["catalina.sh", "run"]
