@@ -31,3 +31,13 @@ steps:
     command: 'buildAndPush'
     Dockerfile: '**/Dockerfile'
     buildContext: '$(System.ArtifactorysDirectory)'
+    tags: 'latest'
+
+- task: Bash@3
+  displayName: "Deploy Docker Container"
+  inputs:
+    targetType: 'inline'
+    script: |
+      docker pull piyush1232/maven_azure:latest
+      docker rm -f maven_app || true
+      docker run -d --restart=always -p 5050:8080 --name maven_app piyush1232/maven_azure:latest
